@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>財富冒險島：時間金庫大挑戰</title>
+<style>
+    :root {
+        --main:#5b35d5;
+        --main2:#8b6cff;
+        --dark:#241454;
+        --soft:#f4f0ff;
+        --gold:#f5b942;
+        --green:#1fa774;
+        --red:#d94b4b;
+        --blue:#2e78d6;
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: "Microsoft JhengHei", Arial, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        background:
+            radial-gradient(circle at top left, #fff4c7 0, transparent 28%),
+            radial-gradient(circle at bottom right, #dfe7ff 0, transparent 35%),
+            linear-gradient(135deg, #f8f5ff, #eef4ff);
+        color: #222;
+    }
+    .game {
+        max-width: 1120px;
+        margin: 24px auto;
+        padding: 24px;
+    }
+    .top {
+        background: linear-gradient(135deg, var(--dark), var(--main));
+        color: white;
+        border-radius: 28px;
+        padding: 28px;
+        box-shadow: 0 18px 45px rgba(60, 40, 150, .22);
+        position: relative;
+        overflow: hidden;
+    }
+    .top:after {
+        content: "💰";
+        position: absolute;
+        right: 28px;
+        top: 10px;
+        font-size: 120px;
+        opacity: .16;
+    }
+    h1 { margin:0; font-size: 34px; }
+    .subtitle { margin-top: 8px; opacity: .88; }
+    .map {
+        margin-top: 20px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .island {
+        flex: 1;
+        min-width: 90px;
+        text-align:center;
+        padding: 10px 6px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.16);
+        border: 1px solid rgba(255,255,255,.28);
+        font-size: 14px;
+    }
+    .island.active {
+        background: white;
+        color: var(--dark);
+        font-weight: 700;
+        transform: translateY(-2px);
+    }
+    .dash {
+        display: grid;
+        grid-template-columns: repeat(6,1fr);
+        gap: 12px;
+        margin: 18px 0;
+    }
+    .stat {
+        background: #fff;
+        border-radius: 20px;
+        padding: 16px 12px;
+        text-align:center;
+        box-shadow: 0 9px 22px rgba(30,30,80,.08);
+        border: 1px solid #ece8ff;
+    }
+    .stat span { display:block; font-size:13px; color:#666; }
+    .stat strong { display:block; margin-top:6px; font-size:21px; color:var(--main); }
+    .layout {
+        display:grid;
+        grid-template-columns: 1.7fr .9fr;
+        gap: 18px;
+    }
+    .panel {
+        background:white;
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 10px 28px rgba(30,30,80,.09);
+        border: 1px solid #ebe7fb;
+        margin-bottom: 18px;
+    }
+    .panel h2, .panel h3 { color: var(--dark); margin-top:0; }
+    .hero-select {
+        display:grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 14px;
+        margin-top: 16px;
+    }
+    .card {
+        border: 2px solid #ddd6f7;
+        background: #fbfaff;
+        border-radius: 20px;
+        padding: 18px;
+        cursor:pointer;
+        transition:.18s;
+        position: relative;
+    }
+    .card:hover {
+        transform: translateY(-5px) scale(1.01);
+        box-shadow: 0 12px 30px rgba(91,53,213,.15);
+        border-color: var(--main2);
+    }
+    .card.selected {
+        background: #f0eaff;
+        border-color: var(--main);
+    }
+    .emoji {
+        font-size: 42px;
+        display:block;
+        margin-bottom: 8px;
+    }
+    .invest-grid {
+        display:grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 14px;
+    }
+    .rate {
+        font-size: 28px;
+        color: var(--main);
+        font-weight: 800;
+    }
+    .tag {
+        display:inline-block;
+        padding: 5px 10px;
+        border-radius:999px;
+        font-size: 13px;
+        background:#eee9ff;
+        color:var(--dark);
+        margin: 3px 3px 3px 0;
+    }
+    button {
+        border:0;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--main), var(--main2));
+        color:white;
+        padding: 13px 20px;
+        font-size: 16px;
+        cursor:pointer;
+        margin: 8px 6px 0 0;
+        font-weight: 700;
+        box-shadow: 0 8px 16px rgba(91,53,213,.2);
+    }
+    button:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    button.gray { background: #777; box-shadow:none; }
+    button.green { background: linear-gradient(135deg,#149760,#45c28b); }
+    button.red { background: linear-gradient(135deg,#d64b4b,#ff7979); }
+    button:disabled { opacity:.48; cursor:not-allowed; transform:none; }
+    .hidden { display:none !important; }
+    .notice {
+        padding: 16px;
+        border-radius: 18px;
+        line-height:1.7;
+        margin: 12px 0;
+        border: 1px solid #ddd;
+    }
+    .good { background:#eafff4; border-color:#a8e4c8; }
+    .bad { background:#fff0f0; border-color:#e5b1b1; }
+    .info { background:#f1f6ff; border-color:#bdd0ff; }
+    .event { background:#fff7e1; border-color:#f0d488; }
+    .danger { background:#fff0f4; border-color:#f0a3b8; }
+    .option {
+        display:block;
+        width:100%;
+        text-align:left;
+        background:#faf9ff;
+        border:1px solid #ddd6f7;
+        color:#222;
+        box-shadow:none;
+        margin: 9px 0;
+    }
+    .option:hover { background:#f0ebff; }
+    .side-list {
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+    }
+    .mini {
+        background:#faf9ff;
+        border:1px solid #ebe7fb;
+        padding: 12px;
+        border-radius: 16px;
+        line-height:1.55;
+    }
+    .badge {
+        display:inline-flex;
+        align-items:center;
+        gap: 6px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        background:#fff7de;
+        border:1px solid #f0d488;
+        margin:4px;
+        font-size:14px;
+    }
+    .bar-wrap {
+        height: 12px;
+        background:#ece8ff;
+        border-radius:999px;
+        overflow:hidden;
+        margin-top: 6px;
+    }
+    .bar {
+        height:100%;
+        width:50%;
+        background: linear-gradient(90deg,#48c78e,#f5b942,#e05656);
+        transition:.3s;
+    }
+    table {
+        width:100%;
+        border-collapse:collapse;
+        margin-top: 12px;
+    }
+    th, td {
+        border-bottom:1px solid #eee;
+        padding:10px;
+        text-align:left;
+    }
+    th { background:#f2eeff; color:var(--dark); }
+    .floating {
+        animation: float 1.2s ease-in-out infinite alternate;
+    }
+    @keyframes float {
+        from { transform: translateY(0); }
+        to { transform: translateY(-7px); }
+    }
+    .shake {
+        animation: shake .3s;
+    }
+    @keyframes shake {
+        0%,100%{transform:translateX(0)}
+        25%{transform:translateX(-6px)}
+        75%{transform:translateX(6px)}
+    }
+    .big-number {
+        font-size: 42px;
+        color: var(--main);
+        font-weight: 900;
+    }
+    .mission {
+        border-left: 6px solid var(--gold);
+        padding-left: 14px;
+        background: #fffaf0;
+        border-radius: 12px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+    .dice {
+        font-size: 72px;
+        text-align:center;
+        margin: 10px 0;
+    }
+    @media(max-width:900px){
+        .layout,.dash,.hero-select,.invest-grid { grid-template-columns:1fr; }
+        .game { padding: 10px; }
+        h1 { font-size: 26px; }
+    }
+</style>
+</head>
+<body>
+<div class="game">
+    <div class="top">
+        <h1>財富冒險島：時間金庫大挑戰</h1>
+        <div class="subtitle">把「貨幣時間價值」變成投資冒險遊戲：賺錢、避險、答題、破任務！</div>
+        <div class="map" id="map"></div>
+    </div>
+
+    <div class="dash">
+        <div class="stat"><span>目前關卡</span><strong id="yearText">準備中</strong></div>
+        <div class="stat"><span>資產</span><strong id="assetText">100萬</strong></div>
+        <div class="stat"><span>知識星星</span><strong id="starText">0⭐</strong></div>
+        <div class="stat"><span>壓力值</span><strong id="stressText">20</strong></div>
+        <div class="stat"><span>聲望</span><strong id="repText">0</strong></div>
+        <div class="stat"><span>目標</span><strong id="goalText">150萬</strong></div>
+    </div>
+
+    <div class="layout">
+        <main>
+            <section id="startPanel" class="panel">
+                <h2>選擇你的財務角色</h2>
+                <p class="mission">任務：在 6 個關卡內，讓資產從 <strong>100 萬</strong> 成長到 <strong>150 萬</strong>，同時壓力值不要爆表。</p>
+                <div class="hero-select" id="heroSelect"></div>
+                <button id="startBtn" onclick="startGame()" disabled>開始冒險</button>
+            </section>
+
+            <section id="storyPanel" class="panel hidden">
+                <h2 id="storyTitle">關卡劇情</h2>
+                <div id="storyText" class="notice info"></div>
+                <button onclick="showInvest()">前往投資市場</button>
+            </section>
+
+            <section id="investPanel" class="panel hidden">
+                <h2>選擇本關投資策略</h2>
+                <p>高報酬通常有高風險；保守策略比較安全，但可能無法達成目標。</p>
+                <div class="invest-grid" id="investGrid"></div>
+                <button id="confirmBtn" onclick="confirmInvest()" disabled>確認策略</button>
+            </section>
+
+            <section id="eventPanel" class="panel hidden">
+                <h2>市場命運骰</h2>
+                <div class="dice floating" id="dice">🎲</div>
+                <div id="eventText" class="notice event"></div>
+                <button onclick="showToolPhase()">使用道具或繼續</button>
+            </section>
+
+            <section id="toolPanel" class="panel hidden">
+                <h2>道具卡階段</h2>
+                <p>你可以使用一張道具卡改變本關結果，也可以保留到後面使用。</p>
+                <div id="toolChoices"></div>
+                <button onclick="showQuestion()">不使用道具，進入知識挑戰</button>
+            </section>
+
+            <section id="questionPanel" class="panel hidden">
+                <h2>知識挑戰：財務管理題</h2>
+                <div id="questionText"></div>
+                <div id="options"></div>
+                <div id="feedback"></div>
+            </section>
+
+            <section id="bossPanel" class="panel hidden">
+                <h2>Boss 關：時間金庫守門人</h2>
+                <p>最後一關必須完成一題綜合判斷。答對可獲得最後資產加成。</p>
+                <div id="bossText"></div>
+                <div id="bossOptions"></div>
+                <div id="bossFeedback"></div>
+            </section>
+
+            <section id="resultPanel" class="panel hidden">
+                <h2>本關結算</h2>
+                <div id="resultText"></div>
+                <button onclick="nextLevel()">繼續冒險</button>
+            </section>
+
+            <section id="finalPanel" class="panel hidden">
+                <h2>冒險完成：財富成就報告</h2>
+                <div id="finalText"></div>
+                <button onclick="restart()">再玩一次</button>
+            </section>
+        </main>
+
+        <aside>
+            <section class="panel">
+                <h3>玩家狀態</h3>
+                <div class="mini">
+                    <div id="heroBox">尚未選擇角色</div>
+                </div>
+                <h3>壓力條</h3>
+                <div class="bar-wrap"><div class="bar" id="stressBar"></div></div>
+                <p style="font-size:13px;color:#666;">壓力達 100 代表過度冒險，最後會扣分。</p>
+            </section>
+
+            <section class="panel">
+                <h3>道具卡</h3>
+                <div class="side-list" id="inventory"></div>
+            </section>
+
+            <section class="panel">
+                <h3>成就徽章</h3>
+                <div id="badges"><span style="color:#777;">尚未獲得</span></div>
+            </section>
+
+            <section class="panel">
+                <h3>教師提示</h3>
+                <div class="mini">
+                    這個遊戲可讓學生分組操作。每組需說明「為什麼選這個投資方案」，並連結到現值、終值、利率、複利與風險。
+                </div>
+            </section>
+        </aside>
+    </div>
+</div>
+
+<script>
+const heroes = [
+    {
+        name:"穩健會計師",
+        icon:"🧮",
+        desc:"起始壓力較低，答題錯誤懲罰較小。",
+        asset:100, stress:10, rep:5,
+        skill:"答錯題目時，壓力只增加 5。"
+    },
+    {
+        name:"創業冒險家",
+        icon:"🚀",
+        desc:"起始聲望較高，投資高風險方案時報酬加 1%。",
+        asset:100, stress:25, rep:15,
+        skill:"選高風險投資時，額外 +1% 報酬。"
+    },
+    {
+        name:"理財新鮮人",
+        icon:"🌱",
+        desc:"起始道具較多，適合初學者。",
+        asset:100, stress:20, rep:0,
+        skill:"遊戲開始多獲得一張提示卡。"
+    }
+];
+
+const levels = [
+    {name:"定存港", story:"你抵達定存港。這裡安全穩定，但成長速度不快。你要先累積本金，還是嘗試更高報酬？"},
+    {name:"債券森林", story:"債券森林裡有穩定的現金流，但也藏著違約風險。你需要比較報酬與安全性。"},
+    {name:"複利火山", story:"火山每年噴發一次，象徵複利的力量。時間越久，成長越驚人。"},
+    {name:"折現迷宮", story:"你看到未來的寶箱，但必須折現回今天，才能知道它到底值多少。"},
+    {name:"年金神殿", story:"神殿提供每年固定給付。你要判斷一次領與分年領，哪一個現值較高。"},
+    {name:"時間金庫", story:"最後的金庫只開給真正理解時間價值的人。準備面對 Boss 綜合題！"}
+];
+
+const investments = [
+    {name:"安全定存", icon:"🏦", rate:.025, risk:4, stress:3, desc:"穩定低風險，適合保住本金。"},
+    {name:"均衡債券", icon:"📜", rate:.055, risk:9, stress:8, desc:"中等報酬與中等風險，攻守兼備。"},
+    {name:"成長基金", icon:"📈", rate:.085, risk:16, stress:15, desc:"報酬潛力較高，但容易受市場事件影響。"}
+];
+
+const events = [
+    {icon:"🌞", title:"景氣轉強", effect:.035, stress:-3, text:"市場情緒升溫，本關報酬率 +3.5%，壓力 -3。"},
+    {icon:"🌧️", title:"景氣衰退", effect:-.045, stress:10, text:"景氣下滑，本關報酬率 -4.5%，壓力 +10。"},
+    {icon:"🔥", title:"通膨升溫", effect:-.02, stress:8, text:"物價上升侵蝕購買力，本關報酬率 -2%，壓力 +8。"},
+    {icon:"🎁", title:"意外獎金", effect:.025, stress:-5, text:"你獲得一筆小獎金，本關報酬率 +2.5%，壓力 -5。"},
+    {icon:"💹", title:"股市大漲", effect:.055, stress:5, text:"市場大漲，本關報酬率 +5.5%，但波動提高，壓力 +5。"},
+    {icon:"🧊", title:"市場冷卻", effect:-.015, stress:4, text:"市場進入觀望，本關報酬率 -1.5%，壓力 +4。"}
+];
+
+const questions = [
+    {
+        q:"100 萬以 5% 複利投資 2 年，終值最接近多少？",
+        opts:["105 萬","110.25 萬","150 萬"],
+        ans:1,
+        exp:"FV = 100 × 1.05² = 110.25 萬。複利會讓第二年也賺到第一年的利息。"
+    },
+    {
+        q:"如果未來 1 年可拿 106 萬，折現率為 6%，現值是多少？",
+        opts:["100 萬","106 萬","112.36 萬"],
+        ans:0,
+        exp:"PV = 106 ÷ 1.06 = 100 萬。這代表一年後的 106 萬等於今天的 100 萬。"
+    },
+    {
+        q:"下列哪一個最能說明複利效果？",
+        opts:["只賺本金的利息","利息也會繼續產生利息","投資一定不會虧損"],
+        ans:1,
+        exp:"複利的重點是『利息再投資』，因此利息也會繼續產生利息。"
+    },
+    {
+        q:"現在拿 100 萬，或 5 年後拿 130 萬。若折現率為 6%，哪個較佳？",
+        opts:["現在拿 100 萬","5 年後拿 130 萬","無法判斷"],
+        ans:0,
+        exp:"130 ÷ 1.06⁵ ≈ 97.15 萬，低於今天的 100 萬，所以現在拿較佳。"
+    },
+    {
+        q:"每年領 60 萬、連續 10 年，折現率 4%，這屬於什麼概念？",
+        opts:["年金現值","公司治理","存貨管理"],
+        ans:0,
+        exp:"固定期間、固定金額的現金流折現回今天，就是年金現值。"
+    }
+];
+
+const boss = {
+    q:"Boss 問題：A 方案現在一次領 500 萬；B 方案每年領 60 萬，連續 10 年，折現率 4%。哪一個較有利？",
+    opts:["A：現在一次領 500 萬","B：每年領 60 萬","兩者完全相同"],
+    ans:0,
+    exp:"B 的年金現值約為 486.65 萬，低於 A 的 500 萬，因此 A 較有利。"
+};
+
+let hero = null;
+let level = 1;
+let asset = 100;
+let stars = 0;
+let stress = 20;
+let rep = 0;
+let selectedInvest = null;
+let currentEvent = null;
+let usedTool = "";
+let bonusRate = 0;
+let badges = [];
+let history = [];
+let tools = [
+    {name:"提示卡", icon:"💡", desc:"答題時先排除一個錯誤選項。", count:1},
+    {name:"保險卡", icon:"🛡️", desc:"本關若事件為負報酬，抵消一半損失。", count:1},
+    {name:"加碼卡", icon:"⚡", desc:"本關答對時額外 +2% 報酬。", count:1}
+];
+
+function init(){
+    renderMap();
+    renderHeroSelect();
+    updateUI();
+}
+function renderMap(){
+    const map = document.getElementById("map");
+    map.innerHTML = levels.map((l,i)=>`<div class="island ${i+1===level?'active':''}">${i+1}. ${l.name}</div>`).join("");
+}
+function renderHeroSelect(){
+    const box = document.getElementById("heroSelect");
+    box.innerHTML = "";
+    heroes.forEach((h,i)=>{
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `<span class="emoji">${h.icon}</span><h3>${h.name}</h3><p>${h.desc}</p><span class="tag">${h.skill}</span>`;
+        div.onclick = ()=>{
+            hero = h;
+            document.querySelectorAll(".hero-select .card").forEach(c=>c.classList.remove("selected"));
+            div.classList.add("selected");
+            document.getElementById("startBtn").disabled = false;
+            document.getElementById("heroBox").innerHTML = `<strong>${h.icon} ${h.name}</strong><br>${h.skill}`;
+        };
+        box.appendChild(div);
+    });
+}
+function startGame(){
+    asset = hero.asset;
+    stress = hero.stress;
+    rep = hero.rep;
+    if(hero.name==="理財新鮮人") tools[0].count += 1;
+    document.getElementById("startPanel").classList.add("hidden");
+    showStory();
+    updateUI();
+}
+function showStory(){
+    renderMap();
+    document.getElementById("storyPanel").classList.remove("hidden");
+    document.getElementById("storyTitle").innerText = `第 ${level} 關：${levels[level-1].name}`;
+    document.getElementById("storyText").innerHTML = levels[level-1].story;
+}
+function showInvest(){
+    hideAllMain();
+    document.getElementById("investPanel").classList.remove("hidden");
+    selectedInvest = null;
+    document.getElementById("confirmBtn").disabled = true;
+    const box = document.getElementById("investGrid");
+    box.innerHTML = "";
+    investments.forEach((inv,i)=>{
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `<span class="emoji">${inv.icon}</span><h3>${inv.name}</h3><div class="rate">${(inv.rate*100).toFixed(1)}%</div><p>${inv.desc}</p><span class="tag">風險 ${inv.risk}</span><span class="tag">壓力 +${inv.stress}</span>`;
+        div.onclick = ()=>{
+            selectedInvest = inv;
+            document.querySelectorAll("#investGrid .card").forEach(c=>c.classList.remove("selected"));
+            div.classList.add("selected");
+            document.getElementById("confirmBtn").disabled = false;
+        };
+        box.appendChild(div);
+    });
+}
+function confirmInvest(){
+    stress += selectedInvest.stress;
+    if(hero.name==="創業冒險家" && selectedInvest.name==="成長基金") bonusRate += .01;
+    hideAllMain();
+    drawEvent();
+}
+function drawEvent(){
+    currentEvent = events[Math.floor(Math.random()*events.length)];
+    document.getElementById("eventPanel").classList.remove("hidden");
+    const dice = document.getElementById("dice");
+    dice.innerText = currentEvent.icon;
+    document.getElementById("eventText").innerHTML = `<strong>${currentEvent.title}</strong><br>${currentEvent.text}`;
+    updateUI();
+}
+function showToolPhase(){
+    hideAllMain();
+    document.getElementById("toolPanel").classList.remove("hidden");
+    renderToolChoices();
+}
+function renderToolChoices(){
+    const box = document.getElementById("toolChoices");
+    box.innerHTML = "";
+    tools.forEach((t,i)=>{
+        const disabled = t.count<=0 ? "disabled" : "";
+        box.innerHTML += `
+            <button ${disabled} onclick="useTool(${i})">${t.icon} 使用${t.name}（剩 ${t.count}）</button>
+            <div class="mini">${t.desc}</div>
+        `;
+    });
+}
+function useTool(i){
+    const t = tools[i];
+    if(t.count<=0) return;
+    t.count--;
+    usedTool = t.name;
+    if(t.name==="保險卡" && currentEvent.effect < 0){
+        currentEvent.effect = currentEvent.effect / 2;
+    }
+    if(t.name==="加碼卡"){
+        bonusRate += .02;
+    }
+    if(t.name==="提示卡"){
+        window.hintActive = true;
+    }
+    renderToolChoices();
+    renderInventory();
+}
+function showQuestion(){
+    hideAllMain();
+    if(level === 6){
+        showBoss();
+        return;
+    }
+    document.getElementById("questionPanel").classList.remove("hidden");
+    const q = questions[level-1];
+    document.getElementById("questionText").innerHTML = `<p><strong>${q.q}</strong></p>`;
+    document.getElementById("feedback").innerHTML = "";
+    const box = document.getElementById("options");
+    box.innerHTML = "";
+    let hideIndex = -1;
+    if(window.hintActive){
+        hideIndex = q.opts.findIndex((_,idx)=>idx !== q.ans);
+        window.hintActive = false;
+    }
+    q.opts.forEach((opt,i)=>{
+        if(i===hideIndex){
+            box.innerHTML += `<button class="option" disabled>💡 提示卡已排除此錯誤選項</button>`;
+        } else {
+            box.innerHTML += `<button class="option" onclick="answer(${i})">${opt}</button>`;
+        }
+    });
+}
+function answer(i){
+    const q = questions[level-1];
+    document.querySelectorAll(".option").forEach(b=>b.disabled=true);
+    const fb = document.getElementById("feedback");
+    if(i===q.ans){
+        stars++;
+        rep += 8;
+        bonusRate += .015;
+        fb.innerHTML = `<div class="notice good"><strong>答對！</strong>獲得 1 顆知識星星、聲望 +8、本關報酬 +1.5%。<br>${q.exp}</div><button onclick="settleLevel()">結算本關</button>`;
+        addBadgeCheck("知識星星", "⭐ 知識星星");
+    }else{
+        let addStress = hero && hero.name==="穩健會計師" ? 5 : 12;
+        stress += addStress;
+        fb.innerHTML = `<div class="notice bad"><strong>答錯！</strong>壓力 +${addStress}。<br>${q.exp}</div><button onclick="settleLevel()">結算本關</button>`;
+        document.querySelector(".game").classList.add("shake");
+        setTimeout(()=>document.querySelector(".game").classList.remove("shake"),350);
+    }
+    updateUI();
+}
+function showBoss(){
+    document.getElementById("bossPanel").classList.remove("hidden");
+    document.getElementById("bossText").innerHTML = `<p><strong>${boss.q}</strong></p>`;
+    document.getElementById("bossFeedback").innerHTML = "";
+    const box = document.getElementById("bossOptions");
+    box.innerHTML = boss.opts.map((o,i)=>`<button class="option" onclick="answerBoss(${i})">${o}</button>`).join("");
+}
+function answerBoss(i){
+    document.querySelectorAll(".option").forEach(b=>b.disabled=true);
+    const fb = document.getElementById("bossFeedback");
+    if(i===boss.ans){
+        stars += 2;
+        rep += 20;
+        bonusRate += .04;
+        fb.innerHTML = `<div class="notice good"><strong>Boss 擊破！</strong>知識星星 +2、聲望 +20、最後報酬 +4%。<br>${boss.exp}</div><button onclick="settleLevel()">最終結算</button>`;
+        addBadge("🏆 Boss 擊破");
+    }else{
+        stress += 18;
+        fb.innerHTML = `<div class="notice bad"><strong>Boss 挑戰失敗。</strong>壓力 +18。<br>${boss.exp}</div><button onclick="settleLevel()">最終結算</button>`;
+    }
+    updateUI();
+}
+function settleLevel(){
+    hideAllMain();
+    const before = asset;
+    let totalRate = selectedInvest.rate + currentEvent.effect + bonusRate;
+    stress += currentEvent.stress;
+    if(stress<0) stress=0;
+    if(totalRate < -.25) totalRate = -.25;
+    asset = asset * (1 + totalRate);
+    const gain = asset - before;
+    if(asset >= 130) addBadge("💰 百萬成長");
+    if(stress <= 25) addBadge("🧘 冷靜投資");
+    if(selectedInvest.name==="安全定存" && level>=3) addBadge("🛡️ 保守派");
+    history.push({
+        level,
+        island: levels[level-1].name,
+        invest: selectedInvest.name,
+        event: currentEvent.title,
+        rate: totalRate,
+        before,
+        after: asset,
+        tool: usedTool || "無"
+    });
+    document.getElementById("resultPanel").classList.remove("hidden");
+    document.getElementById("resultText").innerHTML = `
+        <div class="notice info">
+            <strong>第 ${level} 關結算：${levels[level-1].name}</strong><br>
+            投資策略：${selectedInvest.icon} ${selectedInvest.name}<br>
+            市場事件：${currentEvent.icon} ${currentEvent.title}<br>
+            使用道具：${usedTool || "無"}<br>
+            本關總報酬率：<strong>${(totalRate*100).toFixed(1)}%</strong><br>
+            資產變化：${before.toFixed(2)} 萬 → <strong>${asset.toFixed(2)} 萬</strong>（${gain>=0?"+":""}${gain.toFixed(2)} 萬）<br>
+            教學公式：FV = PV × (1 + r)
+        </div>
+    `;
+    usedTool = "";
+    bonusRate = 0;
+    updateUI();
+}
+function nextLevel(){
+    hideAllMain();
+    level++;
+    if(level>6){
+        finalReport();
+    }else{
+        showStory();
+    }
+    updateUI();
+}
+function finalReport(){
+    document.getElementById("finalPanel").classList.remove("hidden");
+    let title = "";
+    let ending = "";
+    let score = Math.round(asset + stars*8 + rep - Math.max(0, stress-50));
+    if(asset>=150 && stress<80){
+        title = "傳奇財務冒險家";
+        ending = "你成功開啟時間金庫，證明自己能在報酬與風險之間取得平衡。";
+    }else if(asset>=130){
+        title = "穩健財富管理者";
+        ending = "你雖然尚未完全攻頂，但已能運用時間價值做出合理決策。";
+    }else if(stress>=100){
+        title = "高壓風險挑戰者";
+        ending = "你的投資過於刺激，壓力爆表。下次可以嘗試分散風險。";
+    }else{
+        title = "財務實習生";
+        ending = "你完成了冒險，但還需要更熟悉複利、折現與年金判斷。";
+    }
+    let rows = history.map(h=>`
+        <tr>
+            <td>${h.level}</td><td>${h.island}</td><td>${h.invest}</td><td>${h.event}</td><td>${h.tool}</td><td>${(h.rate*100).toFixed(1)}%</td><td>${h.after.toFixed(2)}萬</td>
+        </tr>
+    `).join("");
+    document.getElementById("finalText").innerHTML = `
+        <div class="notice ${asset>=150?'good':'info'}">
+            <div class="big-number">${asset.toFixed(2)} 萬</div>
+            <strong>${title}</strong><br>
+            ${ending}<br>
+            總分：${score}｜知識星星：${stars}｜聲望：${rep}｜壓力：${stress}
+        </div>
+        <h3>冒險紀錄</h3>
+        <table>
+            <tr><th>關</th><th>地點</th><th>投資</th><th>事件</th><th>道具</th><th>報酬率</th><th>資產</th></tr>
+            ${rows}
+        </table>
+        <h3>課堂討論題</h3>
+        <ol>
+            <li>哪一關最能展現「複利」的力量？</li>
+            <li>你是否曾為了高報酬承擔過高風險？結果如何？</li>
+            <li>如果市場折現率提高，未來現金流的現值會變大還是變小？</li>
+            <li>一次領錢與分年領錢，為什麼要用年金現值比較？</li>
+        </ol>
+    `;
+    updateUI();
+}
+function addBadge(b){
+    if(!badges.includes(b)) badges.push(b);
+}
+function addBadgeCheck(key,b){
+    if(stars>=3) addBadge("🌟 三星理財腦");
+    addBadge(b);
+}
+function renderInventory(){
+    const inv = document.getElementById("inventory");
+    inv.innerHTML = tools.map(t=>`<div class="mini"><strong>${t.icon} ${t.name}</strong> × ${t.count}<br><span style="color:#666">${t.desc}</span></div>`).join("");
+}
+function renderBadges(){
+    const box = document.getElementById("badges");
+    box.innerHTML = badges.length ? badges.map(b=>`<span class="badge">${b}</span>`).join("") : `<span style="color:#777;">尚未獲得</span>`;
+}
+function updateUI(){
+    document.getElementById("yearText").innerText = level<=6 ? `${level}/6` : "完成";
+    document.getElementById("assetText").innerText = `${asset.toFixed(1)}萬`;
+    document.getElementById("starText").innerText = `${stars}⭐`;
+    document.getElementById("stressText").innerText = stress;
+    document.getElementById("repText").innerText = rep;
+    document.getElementById("goalText").innerText = "150萬";
+    document.getElementById("stressBar").style.width = Math.min(100, stress) + "%";
+    if(hero) document.getElementById("heroBox").innerHTML = `<strong>${hero.icon} ${hero.name}</strong><br>${hero.skill}`;
+    renderInventory();
+    renderBadges();
+    renderMap();
+}
+function hideAllMain(){
+    ["storyPanel","investPanel","eventPanel","toolPanel","questionPanel","bossPanel","resultPanel","finalPanel"].forEach(id=>document.getElementById(id).classList.add("hidden"));
+}
+function restart(){
+    hero=null; level=1; asset=100; stars=0; stress=20; rep=0; selectedInvest=null; currentEvent=null; usedTool=""; bonusRate=0; badges=[]; history=[];
+    tools = [
+        {name:"提示卡", icon:"💡", desc:"答題時先排除一個錯誤選項。", count:1},
+        {name:"保險卡", icon:"🛡️", desc:"本關若事件為負報酬，抵消一半損失。", count:1},
+        {name:"加碼卡", icon:"⚡", desc:"本關答對時額外 +2% 報酬。", count:1}
+    ];
+    hideAllMain();
+    document.getElementById("startPanel").classList.remove("hidden");
+    document.getElementById("startBtn").disabled=true;
+    renderHeroSelect();
+    updateUI();
+}
+init();
+</script>
+</body>
+</html>
